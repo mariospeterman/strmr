@@ -1,0 +1,36 @@
+# Node
+node_modules/
+dist/
+build/
+.pnpm-store/
+.next/
+.vercel/
+coverage/
+.vscode/
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.poetry/
+.env
+.venv/
+.mypy_cache/
+
+# Logs & temp
+*.log
+logs/
+tmp/
+
+# LiveKit/Media artifacts
+recordings/
+artifacts/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Secrets
+.env*
+!.env.example

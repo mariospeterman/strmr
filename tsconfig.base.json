@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@strmr/*": ["packages/*/src"],
+      "@services/*": ["services/*/src"],
+      "@apps/*": ["apps/*/src"]
+    }
+  },
+  "include": ["apps", "services", "agents", "packages"],
+  "exclude": ["node_modules", "dist"]
+}

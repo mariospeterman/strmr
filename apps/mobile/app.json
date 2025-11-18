@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "strmr-mobile",
+    "slug": "strmr-mobile",
+    "version": "0.1.0",
+    "sdkVersion": "51.0.0",
+    "orientation": "portrait",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#000000"
+      }
+    }
+  }
+}

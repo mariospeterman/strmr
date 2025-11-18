@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livekit-agent
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: livekit-agent
+  template:
+    metadata:
+      labels:
+        app: livekit-agent
+    spec:
+      containers:
+        - name: agent
+          image: ghcr.io/strmr/livekit-agent:latest
+          command: ["poetry", "run", "python", "-m", "src.agent_runner", "--room", "$(ROOM_NAME)", "--identity", "agent"]
+          envFrom:
+            - secretRef:
+                name: platform-secrets
+          env:
+            - name: ROOM_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 1
+              memory: 1Gi

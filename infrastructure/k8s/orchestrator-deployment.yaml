@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/strmr/orchestrator:latest
+          command: ["poetry", "run", "celery", "-A", "src.workers.celery_app", "worker", "-l", "info"]
+          envFrom:
+            - secretRef:
+                name: platform-secrets
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 1
+              memory: 2Gi
