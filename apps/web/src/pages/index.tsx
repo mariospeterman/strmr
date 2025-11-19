@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { CreatorCard } from '../components/CreatorCard';
 import { LiveSession } from '../components/LiveSession';
@@ -106,7 +107,16 @@ export default function Home() {
             </p>
             <div className="hero__cta">
               <span>{heroCta}</span>
-              {user && <button onClick={logout}>Log out</button>}
+              {user?.role === 'creator' && (
+                <Link href="/dashboard/creator" className="ghost">
+                  Open Creator Studio
+                </Link>
+              )}
+              {user && (
+                <button onClick={logout} className="secondary">
+                  Log out
+                </button>
+              )}
             </div>
             {!user && (
               <div className="auth-panel">
@@ -176,7 +186,10 @@ export default function Home() {
                   <CreatorCard
                     key={creator.id}
                     id={creator.id}
-                    name={String((creator.avatarMetadata as Record<string, unknown> | undefined)?.name ?? `Creator ${creator.id.slice(0, 4)}`)}
+                    displayName={
+                      creator.displayName ??
+                      String((creator.avatarMetadata as Record<string, unknown> | undefined)?.name ?? `Creator ${creator.id.slice(0, 4)}`)
+                    }
                     pricePerMinute={creator.pricePerMinute}
                     bio={creator.bio}
                     heroImageUrl={creator.heroImageUrl}

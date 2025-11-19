@@ -53,6 +53,7 @@ export const fetchMe = (token: string) => request<MeResponse>('/auth/me', { toke
 
 export type Creator = {
   id: string;
+  displayName: string | null;
   bio: string | null;
   heroImageUrl: string | null;
   livekitRoomSlug: string | null;
@@ -63,6 +64,73 @@ export type Creator = {
 
 export const listCreators = (token: string, query?: string) =>
   request<Creator[]>(`/catalog/creators${query ? `?query=${encodeURIComponent(query)}` : ''}`, { token });
+
+export type CreatorDataset = {
+  id: string;
+  objectKey: string;
+  status: string;
+  sizeBytes?: number | null;
+  checksum?: string | null;
+  contentType?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreatorProfile = Creator & {
+  humeVoiceId?: string | null;
+  beyondPresenceAvatarId?: string | null;
+  persona?: Record<string, unknown> | null;
+  datasets: CreatorDataset[];
+  lastCloneJobId?: string | null;
+  lastCloneStatus?: string | null;
+  lastCloneAt?: string | null;
+};
+
+export const fetchCreatorProfile = (token: string) => request<CreatorProfile>('/creators/me', { token });
+
+export const updateCreatorProfile = (
+  token: string,
+  creatorId: string,
+  payload: Partial<{
+    displayName: string;
+    bio: string;
+    heroImageUrl: string;
+    pricePerMinute: number;
+    humeVoiceId: string;
+    beyondPresenceAvatarId: string;
+    persona: Record<string, unknown>;
+  }>
+) => request(`/creators/${creatorId}`, { method: 'PATCH', token, body: payload });
+
+export const requestDatasetUpload = (
+  token: string,
+  creatorId: string,
+  payload: { filename: string; contentType: string }
+) => request<{ uploadUrl: string; dataset: CreatorDataset }>(`/creators/${creatorId}/assets/uploads`, {
+  method: 'POST',
+  token,
+  body: payload
+});
+
+export const completeDatasetUpload = (
+  token: string,
+  creatorId: string,
+  datasetId: string,
+  payload: { sizeBytes: number; checksum?: string }
+) => request<CreatorDataset>(`/creators/${creatorId}/assets/${datasetId}/complete`, {
+  method: 'POST',
+  token,
+  body: payload
+});
+
+export const listCreatorDatasets = (token: string, creatorId: string) =>
+  request<CreatorDataset[]>(`/creators/${creatorId}/assets`, { token });
+
+export const startCloneJob = (token: string, creatorId: string, datasetId: string) =>
+  request<{ jobId: string }>(`/creators/${creatorId}/start-clone`, { method: 'POST', token, body: { datasetId } });
+
+export const fetchCloneStatus = (token: string, creatorId: string, jobId: string) =>
+  request<{ status: string; result?: unknown }>(`/creators/${creatorId}/clone-status/${jobId}`, { token });
 
 export type CreateSessionResponse = {
   sessionId: string;

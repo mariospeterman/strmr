@@ -19,10 +19,15 @@ const envSchema = z.object({
   BEYOND_PRESENCE_API_KEY: z.string().min(1),
   BEYOND_PRESENCE_AVATAR_ID: z.string().optional(),
   OBJECT_STORE_BUCKET: z.string().min(1),
+  OBJECT_STORE_ENDPOINT: z.string().url().optional(),
+  OBJECT_STORE_REGION: z.string().optional(),
+  OBJECT_STORE_ACCESS_KEY_ID: z.string().optional(),
+  OBJECT_STORE_SECRET_ACCESS_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   QDRANT_URL: z.string().url().default('http://localhost:6333'),
   QDRANT_API_KEY: z.string().optional(),
-  APP_URL: z.string().url().default('http://localhost:3000')
+  APP_URL: z.string().url().default('http://localhost:3000'),
+  ORCHESTRATOR_URL: z.string().url().default('http://localhost:8000')
 });
 
 export type AppEnv = z.infer<typeof envSchema> & { LIVEKIT_HOST: string };

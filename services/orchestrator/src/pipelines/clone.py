@@ -23,17 +23,18 @@ class ClonePipeline:
     self.embedder = EmbeddingPipeline()
     self.http = httpx.AsyncClient(timeout=60)
 
-  async def _download_upload(self, upload_key: str) -> Path:
-    return self.object_store.download_to_temp(upload_key)
+  async def _download_dataset(self, dataset_key: str) -> Path:
+    return self.object_store.download_to_temp(dataset_key)
 
   async def _call_hume(self, transcripts: list[str], payload: CloneJobPayload) -> dict[str, Any]:
     response = await self.http.post(
       'https://api.hume.ai/v0/evi/s2s',
       headers={'X-Hume-Api-Key': self.settings.hume_api_key},
       json={
-        'persona': payload.personality_profile,
+        'persona': payload.persona,
         'script': transcripts,
-        'voiceClone': payload.voice_clone,
+        'voiceClone': True,
+        'voiceProvider': payload.hume_voice_id,
         'metadata': {'creatorId': payload.creator_id}
       }
     )
@@ -45,10 +46,10 @@ class ClonePipeline:
       'https://api.beyondpresence.ai/avatar/session',
       headers={'Authorization': f'Bearer {self.settings.beyond_presence_api_key}'},
       json={
-        'avatarStyle': payload.avatar_style,
+        'avatarId': payload.beyond_presence_avatar_id,
         'phonemes': hume_manifest.get('phonemes'),
         'audioUrl': hume_manifest.get('audioUrl'),
-        'persona': payload.personality_profile
+        'persona': payload.persona
       }
     )
     response.raise_for_status()
@@ -64,7 +65,7 @@ class ClonePipeline:
     self.vector_client.upsert(creator_id, embeddings, payloads)
 
   async def run(self, payload: CloneJobPayload) -> CloneJobResult:
-    audio_path = await self._download_upload(payload.upload_id)
+    audio_path = await self._download_dataset(payload.dataset_key)
     try:
       transcripts = await self.asr.transcribe(audio_path)
       hume_manifest = await self._call_hume(transcripts, payload)
@@ -77,6 +78,7 @@ class ClonePipeline:
         job_id=payload.job_id,
         creator_id=payload.creator_id,
         tenant_id=payload.tenant_id,
+        dataset_key=payload.dataset_key,
         artifact_url=artifact_url,
         persona_id=avatar_manifest.get('personaId', 'default'),
         model_config=avatar_manifest

@@ -23,14 +23,38 @@ export const creators = pgTable('creators', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
   userId: uuid('user_id').references(() => users.id).notNull(),
   tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
+  displayName: text('display_name'),
   bio: text('bio'),
   avatarMetadata: jsonb('avatar_metadata'),
   stripeAccountId: text('stripe_account_id'),
   heroImageUrl: text('hero_image_url'),
   livekitRoomSlug: text('livekit_room_slug'),
+  humeVoiceId: text('hume_voice_id'),
+  beyondPresenceAvatarId: text('beyond_presence_avatar_id'),
+  persona: jsonb('persona'),
+  lastCloneJobId: text('last_clone_job_id'),
+  lastCloneStatus: text('last_clone_status').$type<'pending' | 'processing' | 'ready' | 'failed'>().default('pending'),
+  lastCloneAt: timestamp('last_clone_at'),
   status: text('status').$type<'draft' | 'ready' | 'processing'>().default('draft'),
   pricePerMinute: integer('price_per_minute').default(100),
+  stripeProductId: text('stripe_product_id'),
+  stripePriceId: text('stripe_price_id'),
   createdAt: timestamp('created_at').defaultNow()
+});
+
+export const creatorDatasets = pgTable('creator_datasets', {
+  id: uuid('id').defaultRandom().primaryKey().notNull(),
+  creatorId: uuid('creator_id').references(() => creators.id).notNull(),
+  tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
+  objectKey: text('object_key').notNull(),
+  contentType: text('content_type'),
+  sizeBytes: integer('size_bytes'),
+  checksum: text('checksum'),
+  status: text('status').$type<'pending' | 'uploaded' | 'processing' | 'ready' | 'failed'>().default('pending'),
+  metadata: jsonb('metadata'),
+  lastJobId: text('last_job_id'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
 });
 
 export const sessions = pgTable('sessions', {
@@ -92,6 +116,7 @@ export type User = typeof users.$inferSelect;
 export type Creator = typeof creators.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type AgentArtifact = typeof agentArtifacts.$inferSelect;
+export type CreatorDataset = typeof creatorDatasets.$inferSelect;
 export type Tip = typeof tips.$inferSelect;
 export type ModerationEvent = typeof moderationEvents.$inferSelect;
 export type UsageRecord = typeof usageRecords.$inferSelect;

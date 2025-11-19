@@ -8,6 +8,7 @@ export default async function catalogRoutes(fastify: FastifyInstance) {
     const rows = await fastify.db
       .select({
         id: creators.id,
+        displayName: creators.displayName,
         bio: creators.bio,
         heroImageUrl: creators.heroImageUrl,
         livekitRoomSlug: creators.livekitRoomSlug,
