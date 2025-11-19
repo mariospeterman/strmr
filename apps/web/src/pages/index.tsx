@@ -204,7 +204,7 @@ export default function Home() {
                   onSessionReady={handleSessionReady}
                 />
               )}
-              {call && (
+              {call && token && (
                 <>
                   <LiveSession
                     token={call.token}

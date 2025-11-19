@@ -19,14 +19,7 @@ export const LiveSession = ({ token, serverUrl, onDisconnected }: LiveSessionPro
   }
 
   return (
-    <LiveKitRoom
-      token={token}
-      serverUrl={serverUrl}
-      connect
-      continuity={true}
-      onDisconnected={onDisconnected}
-      data-lk-theme="default"
-    >
+    <LiveKitRoom token={token} serverUrl={serverUrl} connect onDisconnected={onDisconnected} data-lk-theme="default">
       <VideoConference />
       <RoomAudioRenderer />
     </LiveKitRoom>
