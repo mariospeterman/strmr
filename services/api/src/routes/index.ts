@@ -7,6 +7,7 @@ import catalogRoutes from '../modules/catalog/routes';
 import webhookRoutes from '../modules/webhooks/routes';
 import chatRoutes from '../modules/chat/routes';
 import tenantRoutes from '../modules/tenants/routes';
+import subscriptionRoutes from '../modules/subscriptions/routes';
 
 export const registerRoutes = async (fastify: FastifyInstance, _opts: FastifyPluginOptions) => {
   fastify.register(authRoutes, { prefix: '/auth' });
@@ -17,4 +18,5 @@ export const registerRoutes = async (fastify: FastifyInstance, _opts: FastifyPlu
   fastify.register(catalogRoutes, { prefix: '/catalog' });
   fastify.register(chatRoutes, { prefix: '/chat' });
   fastify.register(webhookRoutes, { prefix: '/webhooks' });
+  fastify.register(subscriptionRoutes, { prefix: '/subscriptions' });
 };

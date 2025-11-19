@@ -4,9 +4,10 @@ import { sendTip } from '../lib/api';
 
 interface TipFormProps {
   sessionId?: string;
+  authToken: string;
 }
 
-export const TipForm = ({ sessionId }: TipFormProps) => {
+export const TipForm = ({ sessionId, authToken }: TipFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const [amount, setAmount] = useState(500);
@@ -23,7 +24,7 @@ export const TipForm = ({ sessionId }: TipFormProps) => {
       return;
     }
     try {
-      await sendTip({ sessionId, amountCents: amount, paymentMethodId: paymentMethod.id });
+      await sendTip(authToken, { sessionId, amountCents: amount, paymentMethodId: paymentMethod.id });
       setStatus('Tip sent!');
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Unable to send tip');

@@ -14,6 +14,7 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash').notNull(),
   role: text('role').$type<'fan' | 'creator' | 'admin'>().default('fan'),
   displayName: text('display_name'),
+  stripeCustomerId: text('stripe_customer_id'),
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').defaultNow()
 });
@@ -25,6 +26,8 @@ export const creators = pgTable('creators', {
   bio: text('bio'),
   avatarMetadata: jsonb('avatar_metadata'),
   stripeAccountId: text('stripe_account_id'),
+  heroImageUrl: text('hero_image_url'),
+  livekitRoomSlug: text('livekit_room_slug'),
   status: text('status').$type<'draft' | 'ready' | 'processing'>().default('draft'),
   pricePerMinute: integer('price_per_minute').default(100),
   createdAt: timestamp('created_at').defaultNow()

@@ -7,7 +7,9 @@ const envSchema = z.object({
   REDIS_URL: z.string().min(1),
   LIVEKIT_API_KEY: z.string().min(1),
   LIVEKIT_API_SECRET: z.string().min(1),
-  LIVEKIT_HOST: z.string().url(),
+  LIVEKIT_HOST: z.string().url().optional(),
+  LIVEKIT_URL: z.string().url().optional(),
+  JWT_SECRET: z.string().min(32),
   STRIPE_SECRET_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
   STRIPE_PRICE_PER_MINUTE: z.string().optional(),
@@ -19,10 +21,11 @@ const envSchema = z.object({
   OBJECT_STORE_BUCKET: z.string().min(1),
   OPENAI_API_KEY: z.string().optional(),
   QDRANT_URL: z.string().url().default('http://localhost:6333'),
-  QDRANT_API_KEY: z.string().optional()
+  QDRANT_API_KEY: z.string().optional(),
+  APP_URL: z.string().url().default('http://localhost:3000')
 });
 
-export type AppEnv = z.infer<typeof envSchema>;
+export type AppEnv = z.infer<typeof envSchema> & { LIVEKIT_HOST: string };
 
 export const loadEnv = (overrides?: Record<string, string | undefined>): AppEnv => {
   const result = envSchema.safeParse({
@@ -34,6 +37,13 @@ export const loadEnv = (overrides?: Record<string, string | undefined>): AppEnv 
     console.error('Invalid environment configuration', result.error.flatten().fieldErrors);
     throw new Error('Invalid environment configuration');
   }
-
-  return result.data;
+  const data = result.data;
+  if (!data.LIVEKIT_HOST) {
+    if (data.LIVEKIT_URL) {
+      data.LIVEKIT_HOST = data.LIVEKIT_URL;
+    } else {
+      throw new Error('LIVEKIT_HOST or LIVEKIT_URL must be provided');
+    }
+  }
+  return data;
 };

@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 from loguru import logger
-from livekit.agents import JobContext, JobRequest, WorkerOptions, agent_worker
+from livekit.agents import JobContext, JobRequest, Worker, WorkerOptions
 from livekit.agents.media import default_audio_track
 
 from .clients.hume import get_hume_client
@@ -55,9 +55,7 @@ async def handle_session(ctx: JobContext, request: JobRequest):
 
 async def main(room: str, identity: str):
     settings = get_settings()
-    options = WorkerOptions(auto_subscribe=True)
-
-    worker = agent_worker.create(options)
+    worker = Worker(WorkerOptions(auto_subscribe=True))
 
     @worker.on_startup
     async def _startup(ctx: JobContext, request: JobRequest):

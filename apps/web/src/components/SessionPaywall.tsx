@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { createSession, CreateSessionParams } from '../lib/api';
+import { createSession } from '../lib/api';
 
 interface SessionPaywallProps {
   creatorId: string;
-  onSessionReady: (token: string, roomUrl: string, sessionId: string) => void;
+  tenantEmail?: string;
+  authToken: string;
+  onSessionReady: (payload: { fanToken: string; roomUrl: string; sessionId: string }) => void;
 }
 
-export const SessionPaywall = ({ creatorId, onSessionReady }: SessionPaywallProps) => {
+export const SessionPaywall = ({ creatorId, tenantEmail, authToken, onSessionReady }: SessionPaywallProps) => {
   const stripe = useStripe();
   const elements = useElements();
-  const [email, setEmail] = useState('fan@strmr.ai');
+  const [email, setEmail] = useState(tenantEmail ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,8 +27,8 @@ export const SessionPaywall = ({ creatorId, onSessionReady }: SessionPaywallProp
       if (pmError || !paymentMethod) {
         throw pmError ?? new Error('Unable to create payment method');
       }
-      const session = await createSession({ creatorId, paymentMethodId: paymentMethod.id, customerEmail: email });
-      onSessionReady(session.joinTokens.fan, process.env.NEXT_PUBLIC_LIVEKIT_URL ?? '', session.sessionId);
+      const session = await createSession(authToken, { creatorId, paymentMethodId: paymentMethod.id, customerEmail: email });
+      onSessionReady({ fanToken: session.joinTokens.fan, roomUrl: process.env.NEXT_PUBLIC_LIVEKIT_URL ?? '', sessionId: session.sessionId });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to start session');
     } finally {

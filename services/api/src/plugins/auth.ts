@@ -24,7 +24,7 @@ const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
 
 export default fp(async (fastify: FastifyInstance) => {
   fastify.register(fastifyJwt, {
-    secret: fastify.config.LIVEKIT_API_SECRET // placeholder secret, replace with dedicated JWT secret
+    secret: fastify.config.JWT_SECRET
   });
 
   fastify.decorate('authenticate', authenticate);

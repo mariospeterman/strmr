@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { sessions } from '../../db/schema';
+import { creators, sessions, users } from '../../db/schema';
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 
@@ -21,21 +21,26 @@ export default async function sessionRoutes(fastify: FastifyInstance) {
     const body = createSessionSchema.parse(request.body);
     const roomId = `session-${randomUUID()}`;
 
+    const [creator] = await fastify.db.select().from(creators).where(eq(creators.id, body.creatorId));
+    if (!creator || creator.tenantId !== request.user?.tenantId) {
+      return reply.code(404).send({ message: 'Creator not found' });
+    }
+
     await fastify.services.livekit.ensureRoom(roomId, { creatorId: body.creatorId, mode: body.mode });
 
-    const customer = await fastify.services.stripe.ensureCustomer(
-      request.user?.tenantId ?? 'tenant-default',
-      body.customerEmail
-    );
+    const [fan] = await fastify.db.select().from(users).where(eq(users.id, request.user!.id));
+    if (!fan?.stripeCustomerId) {
+      return reply.code(400).send({ message: 'Fan missing billing profile' });
+    }
 
-    await fastify.services.stripe.createPreAuthorization(customer.id, fastify.config.STRIPE_PRICE_PER_MINUTE ?? '');
+    await fastify.services.stripe.createPreAuthorization(fan.stripeCustomerId, fastify.config.STRIPE_PRICE_PER_MINUTE ?? '');
 
     const [session] = await fastify.db.insert(sessions).values({
       roomId,
       creatorId: body.creatorId,
-      fanId: request.user?.id ?? '00000000-0000-0000-0000-000000000000',
-      tenantId: request.user?.tenantId ?? 'tenant-default',
-      billingCustomerId: customer.id,
+      fanId: request.user!.id,
+      tenantId: request.user!.tenantId,
+      billingCustomerId: fan.stripeCustomerId,
       status: 'created'
     }).returning();
 

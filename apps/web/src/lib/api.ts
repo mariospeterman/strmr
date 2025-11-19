@@ -1,3 +1,69 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/v1';
+
+type FetchOptions = {
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  token?: string;
+  body?: unknown;
+};
+
+const request = async <T>(path: string, options: FetchOptions = {}): Promise<T> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  };
+  if (options.token) {
+    headers.Authorization = `Bearer ${options.token}`;
+  }
+  const res = await fetch(`${API_URL}${path}`, {
+    method: options.method ?? 'GET',
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || 'Request failed');
+  }
+  if (res.status === 204) {
+    return undefined as T;
+  }
+  const text = await res.text();
+  return text ? (JSON.parse(text) as T) : (undefined as T);
+};
+
+export type AuthResponse = {
+  token: string;
+  tenant: { id: string; slug: string; name: string };
+  user: {
+    id: string;
+    email: string;
+    role: 'fan' | 'creator' | 'admin';
+    displayName?: string | null;
+    stripeCustomerId?: string | null;
+  };
+};
+
+export const signup = (payload: { email: string; password: string; displayName: string; tenantSlug: string; tenantName?: string }) =>
+  request<AuthResponse>('/auth/signup', { method: 'POST', body: payload });
+
+export const login = (payload: { email: string; password: string; tenantSlug: string }) =>
+  request<AuthResponse>('/auth/login', { method: 'POST', body: payload });
+
+export type MeResponse = Omit<AuthResponse, 'token'>;
+
+export const fetchMe = (token: string) => request<MeResponse>('/auth/me', { token });
+
+export type Creator = {
+  id: string;
+  bio: string | null;
+  heroImageUrl: string | null;
+  livekitRoomSlug: string | null;
+  pricePerMinute: number;
+  status: string;
+  avatarMetadata: Record<string, unknown> | null;
+};
+
+export const listCreators = (token: string, query?: string) =>
+  request<Creator[]>(`/catalog/creators${query ? `?query=${encodeURIComponent(query)}` : ''}`, { token });
+
 export type CreateSessionResponse = {
   sessionId: string;
   roomId: string;
@@ -7,40 +73,23 @@ export type CreateSessionResponse = {
   };
 };
 
-export type CreateSessionParams = {
-  creatorId: string;
-  paymentMethodId: string;
-  customerEmail: string;
-};
+export const createSession = (token: string, params: { creatorId: string; paymentMethodId: string; customerEmail: string }) =>
+  request<CreateSessionResponse>('/sessions', { method: 'POST', token, body: params });
 
-export const createSession = async (params: CreateSessionParams): Promise<CreateSessionResponse> => {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create session');
-  }
-  return response.json();
-};
+export const heartbeat = (token: string, sessionId: string, minutes: number) =>
+  request<void>(`/sessions/${sessionId}/heartbeat`, { method: 'POST', token, body: { minutes } });
 
-export const heartbeat = async (sessionId: string, minutes: number) => {
-  await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${sessionId}/heartbeat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ minutes })
-  });
-};
+export const terminateSession = (token: string, sessionId: string) =>
+  request<void>(`/sessions/${sessionId}/terminate`, { method: 'POST', token });
 
-export const sendTip = async (payload: { sessionId: string; amountCents: number; paymentMethodId: string; currency?: string; message?: string }) => {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/tip`, {
+export const createCheckout = (token: string, creatorId: string) =>
+  request<{ url: string }>('/subscriptions/checkout', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    token,
+    body: { creatorId, successPath: '/dashboard', cancelPath: '/' }
   });
-  if (!response.ok) {
-    throw new Error('Failed to send tip');
-  }
-  return response.json();
-};
+
+export const openBillingPortal = (token: string) => request<{ url: string }>('/subscriptions/portal', { method: 'POST', token });
+
+export const sendTip = (token: string, payload: { sessionId: string; amountCents: number; paymentMethodId: string; currency?: string; message?: string }) =>
+  request('/chat/tip', { method: 'POST', token, body: payload });

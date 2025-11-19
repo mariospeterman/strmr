@@ -1,26 +1,13 @@
-import { LiveKitRoom, VideoRenderer, useTracks, AudioRenderer } from '@livekit/components-react';
-import type { TrackReferenceOrPlaceholder } from '@livekit/components-core';
+import { LiveKitRoom, RoomAudioRenderer, VideoConference } from '@livekit/components-react';
 import { useEffect, useState } from 'react';
 
 interface LiveSessionProps {
   token?: string;
   serverUrl?: string;
+  onDisconnected?: () => void;
 }
 
-const Tracks = () => {
-  const tracks = useTracks([{ source: 'camera' }, { source: 'microphone' }]);
-  return (
-    <>
-      {tracks.map((track: TrackReferenceOrPlaceholder) => (
-        <div key={track.publication?.trackSid} className="track">
-          {track.publication?.kind === 'video' ? <VideoRenderer trackRef={track} /> : <AudioRenderer trackRef={track} />}
-        </div>
-      ))}
-    </>
-  );
-};
-
-export const LiveSession = ({ token, serverUrl }: LiveSessionProps) => {
+export const LiveSession = ({ token, serverUrl, onDisconnected }: LiveSessionProps) => {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -32,8 +19,16 @@ export const LiveSession = ({ token, serverUrl }: LiveSessionProps) => {
   }
 
   return (
-    <LiveKitRoom token={token} serverUrl={serverUrl} connect>
-      <Tracks />
+    <LiveKitRoom
+      token={token}
+      serverUrl={serverUrl}
+      connect
+      continuity={true}
+      onDisconnected={onDisconnected}
+      data-lk-theme="default"
+    >
+      <VideoConference />
+      <RoomAudioRenderer />
     </LiveKitRoom>
   );
 };
